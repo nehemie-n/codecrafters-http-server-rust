@@ -45,8 +45,10 @@ fn handle_request(mut stream: TcpStream) {
         }
         _ if path.starts_with("/echo/") => {
             let message: Vec<&str> = path.split("/echo/").collect();
-            let message = message[0];
-            let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n{}", message);
+            println!("Message {:?}", message);
+            let message = message[1].to_string();
+            println!("Message {}", message);
+            let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}\r\n\r\n", message.len(), message);
             let _ = stream.write(resp.as_bytes());
         }
         _ => {
