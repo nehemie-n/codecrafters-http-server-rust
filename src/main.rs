@@ -1,12 +1,8 @@
 use std::io::BufRead;
 use std::io::BufReader;
-use std::io::Read;
 use std::io::Write;
 use std::net::TcpListener;
 use std::net::TcpStream;
-use std::path;
-use std::string;
-use std::task::Context;
 
 /**
  * GET /index.html HTTP/1.1
@@ -36,7 +32,7 @@ fn extract_request(mut stream: &TcpStream) -> Vec<String> {
 fn handle_request(mut stream: TcpStream) {
     println!("new client!");
     let request = extract_request(&stream);
-    let (method, path) = extract_path(request);
+    let (_method, path) = extract_path(request);
 
     match path.as_str() {
         "/" => {
