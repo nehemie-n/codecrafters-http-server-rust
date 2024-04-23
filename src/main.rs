@@ -48,7 +48,7 @@ fn handle_request(mut stream: TcpStream) {
             println!("Message {:?}", message);
             let message = message[1].to_string();
             println!("Message {}", message);
-            let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}\r\n\r\n", message.len(), message);
+            let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", message.len(), message);
             let _ = stream.write(resp.as_bytes());
         }
         _ => {
