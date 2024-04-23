@@ -4,6 +4,9 @@ use std::io::Read;
 use std::io::Write;
 use std::net::TcpListener;
 use std::net::TcpStream;
+use std::path;
+use std::string;
+use std::task::Context;
 
 /**
  * GET /index.html HTTP/1.1
@@ -11,23 +14,43 @@ use std::net::TcpStream;
  * Host: localhost:4221
  * User-Agent: curl/7.64.1
  */
+
+fn extract_path(req: Vec<String>) -> (String, String) {
+    let first_line = req.get(0).unwrap();
+    let mut first_line = first_line.split_whitespace();
+    let method = first_line.next().unwrap();
+    let path = first_line.next().unwrap();
+    return (method.to_string(), path.to_string());
+}
+
+//
+fn extract_request(mut stream: &TcpStream) -> Vec<String> {
+    let reader = BufReader::new(&mut stream);
+    let req: Vec<String> = reader
+        .lines()
+        .map(|l| l.unwrap())
+        .take_while(|l| !l.is_empty())
+        .collect();
+    req
+}
 fn handle_request(mut stream: TcpStream) {
     println!("new client!");
-    let mut reader = BufReader::new(&mut stream);
-    let mut first_line = String::new();
-    reader.read_line(&mut first_line).unwrap();
+    let request = extract_request(&stream);
+    let (method, path) = extract_path(request);
 
-    println!("first line: {}", first_line);
-    let parts = first_line.split_whitespace().collect::<Vec<&str>>();
-    let path = parts[1];
-
-    match path {
+    match path.as_str() {
         "/" => {
             let resp = "HTTP/1.1 200 OK\r\n\r\n".to_string();
             let _ = stream.write(resp.as_bytes());
         }
         "/index.html" => {
             let resp = "HTTP/1.1 404 NOT FOUND\r\n\r\n".to_string();
+            let _ = stream.write(resp.as_bytes());
+        }
+        _ if path.starts_with("/echo/") => {
+            let message: Vec<&str> = path.split("/").collect();
+            let message = message[2];
+            let resp = format!("HTTP/1.1 200 OK\r\n\r\n{}", message);
             let _ = stream.write(resp.as_bytes());
         }
         _ => {
@@ -43,6 +66,6 @@ fn main() {
     for stream in listener.incoming() {
         let stream = stream.unwrap();
         handle_request(stream);
-        print!("new client!");
+        println!("new client!");
     }
 }
