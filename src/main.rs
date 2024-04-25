@@ -11,7 +11,8 @@ use std::net::TcpStream;
  * User-Agent: curl/7.64.1
  */
 
-fn extract_path(req: Vec<String>) -> (String, String) {
+fn extract_path(req: &Vec<String>) -> (String, String) {
+    println!("{:?}", req);
     let first_line = req.get(0).unwrap();
     let mut first_line = first_line.split_whitespace();
     let method = first_line.next().unwrap();
@@ -19,7 +20,19 @@ fn extract_path(req: Vec<String>) -> (String, String) {
     return (method.to_string(), path.to_string());
 }
 
-//
+/**
+ * Extracts the user agent header
+ * req: ["GET /echo/abc HTTP/1.1", "Host: 127.0.0.1:4221", "User-Agent: curl/8.4.0", "Accept: *\/\*"]
+ */
+fn extract_user_agent(req: &Vec<String>) -> String {
+    let agent = req.get(2).unwrap();
+    let agent = agent.split(":").last().unwrap();
+    return agent.to_string();
+}
+
+/**
+ * Extracts the request
+ */
 fn extract_request(mut stream: &TcpStream) -> Vec<String> {
     let reader = BufReader::new(&mut stream);
     let req: Vec<String> = reader
@@ -32,7 +45,8 @@ fn extract_request(mut stream: &TcpStream) -> Vec<String> {
 fn handle_request(mut stream: TcpStream) {
     println!("new client!");
     let request = extract_request(&stream);
-    let (_method, path) = extract_path(request);
+    let (_method, path) = extract_path(&request);
+    let user_agent = extract_user_agent(&request);
 
     match path.as_str() {
         "/" => {
@@ -48,7 +62,15 @@ fn handle_request(mut stream: TcpStream) {
             println!("Message {:?}", message);
             let message = message[1].to_string();
             println!("Message {}", message);
-            let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", message.len(), message);
+            let resp = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}",
+                message.len(),
+                message
+            );
+            let _ = stream.write(resp.as_bytes());
+        }
+        _ if path.starts_with("/user-agent") => {
+            let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", user_agent.len(), user_agent);
             let _ = stream.write(resp.as_bytes());
         }
         _ => {
