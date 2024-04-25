@@ -26,7 +26,7 @@ fn extract_path(req: &Vec<String>) -> (String, String) {
  */
 fn extract_user_agent(req: &Vec<String>) -> String {
     let agent = req.get(2).unwrap();
-    let agent = agent.split(":").last().unwrap();
+    let agent = agent.split(":").last().unwrap().trim();
     return agent.to_string();
 }
 
