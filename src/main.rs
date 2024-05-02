@@ -1,5 +1,8 @@
+use std::env;
+use std::fs;
 use std::io::BufRead;
 use std::io::BufReader;
+use std::io::Read;
 use std::io::Write;
 use std::net::TcpListener;
 use std::net::TcpStream;
@@ -46,10 +49,30 @@ fn extract_request(mut stream: &TcpStream) -> Vec<String> {
     req
 }
 
+fn handle_file_req(mut stream: &TcpStream, path: String, directoy: String) {
+    let filename = path.split("/files/").last().unwrap().to_string();
+    let mut resp = String::new();
+    if let Ok(mut file) = fs::File::open(format!("{}/{}", directoy, filename)) {
+        let mut file_string = String::new();
+        let _ = file.read_to_string(&mut file_string);
+        resp = format!(
+            "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}",
+            file_string.len(),
+            file_string
+        );
+    } else {
+        resp = format!(
+            "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}",
+            "".len(),
+            ""
+        );
+    }
+    let _ = stream.write(resp.as_bytes());
+}
 /***
  * Handle a single request
  */
-fn handle_request(mut stream: TcpStream) {
+fn handle_request(mut stream: TcpStream, directory: String) {
     println!("new client!");
     let request = extract_request(&stream);
     let (_method, path) = extract_path(&request);
@@ -84,6 +107,7 @@ fn handle_request(mut stream: TcpStream) {
             );
             let _ = stream.write(resp.as_bytes());
         }
+        _ if path.starts_with("/files/") => handle_file_req(&stream, path, directory),
         _ => {
             let resp = "HTTP/1.1 404 NOT FOUND\r\n\r\n".to_string();
             let _ = stream.write(resp.as_bytes());
@@ -93,12 +117,14 @@ fn handle_request(mut stream: TcpStream) {
 }
 
 fn main() {
+    let directory = env::args().nth(2).unwrap_or("".to_string());
     println!("Logs from your program will appear here!");
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
     for stream in listener.incoming() {
+        let directory = directory.clone();
         thread::spawn(move || {
             let stream = stream.unwrap();
-            handle_request(stream);
+            handle_request(stream, directory);
         });
     }
 }
