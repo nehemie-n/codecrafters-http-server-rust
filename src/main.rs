@@ -93,14 +93,9 @@ fn main() {
     println!("Logs from your program will appear here!");
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
     for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => {
-                thread::spawn(move || {
-                    handle_request(stream);
-                });
-                println!("new client!");
-            }
-            Err(_) => {}
+        if let Ok(stream) = stream {
+            println!("accepted new connection: {}", stream.peer_addr().unwrap());
+            thread::spawn(move || handle_request(stream));
         }
     }
 }
