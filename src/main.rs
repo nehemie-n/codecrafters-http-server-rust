@@ -26,6 +26,7 @@ fn extract_path(req: &Vec<String>) -> (String, String) {
  * req: ["GET /echo/abc HTTP/1.1", "Host: 127.0.0.1:4221", "User-Agent: curl/8.4.0", "Accept: *\/\*"]
  */
 fn extract_user_agent(req: &Vec<String>) -> String {
+    println!("{:?}", req);
     let agent = req.get(2).unwrap();
     let agent = agent.split(":").last().unwrap().trim();
     return agent.to_string();
