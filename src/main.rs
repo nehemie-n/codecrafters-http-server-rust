@@ -51,23 +51,23 @@ fn extract_request(mut stream: &TcpStream) -> Vec<String> {
 
 fn handle_file_req(mut stream: &TcpStream, path: String, directoy: String) {
     let filename = path.split("/files/").last().unwrap().to_string();
-    let mut resp = String::new();
+    let mut _resp = String::new();
     if let Ok(mut file) = fs::File::open(format!("{}/{}", directoy, filename)) {
         let mut file_string = String::new();
         let _ = file.read_to_string(&mut file_string);
-        resp = format!(
-            "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}",
+        _resp = format!(
+            "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n{}",
             file_string.len(),
             file_string
         );
     } else {
-        resp = format!(
-            "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}",
+        _resp = format!(
+            "HTTP/1.1 404 Not Found\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n{}",
             "".len(),
             ""
         );
     }
-    let _ = stream.write(resp.as_bytes());
+    let _ = stream.write(_resp.as_bytes());
 }
 /***
  * Handle a single request
