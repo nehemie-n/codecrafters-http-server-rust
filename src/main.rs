@@ -87,15 +87,16 @@ fn handle_request(mut stream: TcpStream) {
             let _ = stream.write(resp.as_bytes());
         }
     }
+    stream.flush().unwrap();
 }
 
 fn main() {
     println!("Logs from your program will appear here!");
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
     for stream in listener.incoming() {
-        if let Ok(stream) = stream {
-            println!("accepted new connection: {}", stream.peer_addr().unwrap());
-            thread::spawn(move || handle_request(stream));
-        }
+        thread::spawn(move || {
+            let stream = stream.unwrap();
+            handle_request(stream);
+        });
     }
 }
