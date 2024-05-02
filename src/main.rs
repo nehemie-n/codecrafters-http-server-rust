@@ -13,7 +13,7 @@ use std::thread;
  */
 
 fn extract_path(req: &Vec<String>) -> (String, String) {
-    println!("{:?}", req);
+    println!("REQ PATH: {:?}", req);
     let first_line = req.get(0).unwrap();
     let mut first_line = first_line.split_whitespace();
     let method = first_line.next().unwrap();
@@ -26,8 +26,9 @@ fn extract_path(req: &Vec<String>) -> (String, String) {
  * req: ["GET /echo/abc HTTP/1.1", "Host: 127.0.0.1:4221", "User-Agent: curl/8.4.0", "Accept: *\/\*"]
  */
 fn extract_user_agent(req: &Vec<String>) -> String {
-    println!("{:?}", req);
-    let agent = req.get(2).unwrap();
+    println!("REQ AGENT: {:?}", req);
+    let default = ":".to_string();
+    let agent = req.get(2).unwrap_or(&default);
     let agent = agent.split(":").last().unwrap().trim();
     return agent.to_string();
 }
